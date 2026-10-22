@@ -1,0 +1,44 @@
+
+# CMake build files
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# C compiled files
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+# Godot 4 generated files
+.godot/
+
+# VS Code local configuration
+.vscode/*
+
+# Allow shared VS Code settings later
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*~
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example

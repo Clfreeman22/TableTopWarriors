@@ -9,12 +9,27 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-add_executable(game_server
-    src/main.c
+add_library(game_core STATIC
+    src/room.c
 )
 
-target_compile_options(game_server PRIVATE
+target_include_directories(game_core
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_compile_options(game_core PRIVATE
     -Wall
     -Wextra
     -Wpedantic
 )
+
+add_executable(game_server
+    src/main.c
+)
+
+target_link_libraries(game_server
+    PRIVATE game_core
+)
+
+enable_testing()

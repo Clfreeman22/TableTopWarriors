@@ -24,7 +24,6 @@ typedef struct {
 typedef struct {
     char code[ROOM_CODE_LENGTH + 1];
     RoomStatus status;
-
     PlayerSession players[PLAYERS_PER_ROOM];
     size_t player_count;
 } Room;
@@ -37,9 +36,9 @@ typedef struct {
 
 void room_manager_init(RoomManager *manager);
 
-Room *room_create(RoomManager *manager, uint64_t host_session_id);
+Room* room_create(RoomManager *manager, uint64_t host_session_id);
 
-Room *room_find(RoomManager *manager, const char *code);
+Room* room_find(RoomManager *manager, const char *code);
 
 bool room_join(RoomManager *manager, Room *room, uint64_t guest_session_id);
 

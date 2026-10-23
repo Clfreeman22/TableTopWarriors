@@ -33,3 +33,14 @@ target_link_libraries(game_server
 )
 
 enable_testing()
+
+add_executable(test_room
+    tests/test_room.c
+)
+
+target_link_libraries(test_room PRIVATE game_core)
+
+add_test(
+    NAME room_manager_tests
+    COMMAND test_room
+)

@@ -10,22 +10,34 @@ int main(void)
     Room *room2 = room_create(&manager, 102);
     Room *room3 = room_create(&manager, 103);
 
-    if (room1 != NULL)
+    if (room1 == NULL || room2 == NULL || room3 == NULL)
     {
-        printf("Room 1: %s\n", room1->code);
+        printf("Failed to create rooms!\n");
+        return 1;
     }
 
-    if (room2 != NULL)
+    printf("Initial rooms: %zu\n", manager.room_count);
+
+    // Destroy the second room.
+    bool destroyed = room_destroy(&manager, room2->code);
+
+    printf("Room destroyed: %s\n", destroyed ? "Yes" : "No");
+    printf("Remaining rooms: %zu\n", manager.room_count);
+
+    // Check that the destroyed room cannot be found.
+    Room *found = room_find(&manager, "000001");
+
+    printf("Deleted room found: %s\n", found ? "Yes" : "No");
+
+    // Create another room to test slot reuse.
+    Room *room4 = room_create(&manager, 104);
+
+    if (room4 != NULL)
     {
-        printf("Room 2: %s\n", room2->code);
+        printf("New room code: %s\n", room4->code);
     }
 
-    if (room3 != NULL)
-    {
-        printf("Room 3: %s\n", room3->code);
-    }
-
-    printf("Total rooms: %zu\n", manager.room_count);
+    printf("Final room count: %zu\n", manager.room_count);
 
     return 0;
 }

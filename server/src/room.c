@@ -276,3 +276,62 @@ bool room_destroy(RoomManager *manager, const char *code)
 
     return false;
 }
+
+bool room_leave(RoomManager *manager, Room *room, uint64_t session_id)
+{
+    if (manager == NULL || room == NULL || session_id == 0)
+    {
+        return false;
+    }
+
+    // Verify the room is active
+    bool room_exists = false;
+
+    for (size_t i = 0; i < MAX_ROOMS; i++)
+    {
+        if (manager->occupied[i] && room == &manager->rooms[i])
+        {
+            room_exists = true;
+            break;
+        }
+    }
+
+    if (!room_exists)
+    {
+        return false;
+    }
+
+    // Host is always player 0.
+    // Destroy room if host leaves
+    if (room->players[0].session_id == session_id)
+    {
+        char code[ROOM_CODE_LENGTH + 1];
+        memcpy(code, room->code, sizeof(code));
+
+        return room_destroy(manager, code);
+    }
+
+    // Guest is player 1.
+    if (room->player_count == 2 &&
+        room->players[1].session_id == session_id)
+    {
+        // If the match is already playing, mark it finished.
+        if (room->status == ROOM_PLAYING)
+        {
+            room->status = ROOM_FINISHED;
+            room->players[1].connected = false;
+            return true;
+        }
+
+        // Otherwise remove the guest.
+        room->players[1].session_id = 0;
+        room->players[1].connected = false;
+
+        room->player_count = 1;
+        room->status = ROOM_WAITING;
+
+        return true;
+    }
+
+    return false;
+}

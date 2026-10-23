@@ -203,6 +203,65 @@ void test_invalid_inputs(void)
     printf("PASS: invalid_inputs\n");
 }
 
+void test_host_leave(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    char code[ROOM_CODE_LENGTH + 1];
+    strcpy(code, room->code);
+
+    assert(room_leave(&manager, room, 101) == true);
+    assert(manager.room_count == 0);
+    assert(room_find(&manager, code) == NULL);
+
+    printf("PASS: host_leave\n");
+}
+
+void test_guest_leave(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    assert(room_join(&manager, room, 102) == true);
+
+    assert(room_leave(&manager, room, 102) == true);
+
+    assert(manager.room_count == 1);
+    assert(room->player_count == 1);
+    assert(room->status == ROOM_WAITING);
+    assert(room->players[1].session_id == 0);
+    assert(room->players[1].connected == false);
+
+    printf("PASS: guest_leave\n");
+}
+
+void test_guest_leave_during_match(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    assert(room_join(&manager, room, 102) == true);
+
+    // Simulate an active match.
+    room->status = ROOM_PLAYING;
+
+    assert(room_leave(&manager, room, 102) == true);
+    assert(room->status == ROOM_FINISHED);
+    assert(room->players[1].connected == false);
+
+    printf("PASS: guest_leave_during_match\n");
+}
+
 int main(void)
 {
     test_room_manager_init();
@@ -215,6 +274,9 @@ int main(void)
     test_room_reuse();
     test_max_rooms();
     test_invalid_inputs();
+    test_host_leave();
+    test_guest_leave();
+    test_guest_leave_during_match();
 
     printf("\nAll room manager tests passed!\n");
 

@@ -44,4 +44,6 @@ bool room_join(RoomManager *manager, Room *room, uint64_t guest_session_id);
 
 bool room_destroy(RoomManager *manager, const char *code);
 
+bool room_leave(RoomManager *manager, Room *room, uint64_t session_id);
+
 #endif

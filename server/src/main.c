@@ -1,30 +1,31 @@
 #include <stdio.h>
-#include <string.h>
-
 #include "room.h"
 
 int main(void)
 {
     RoomManager manager;
-    
     room_manager_init(&manager);
 
-    manager.occupied[0] = true;
-    manager.room_count = 1;
+    Room *room1 = room_create(&manager, 101);
+    Room *room2 = room_create(&manager, 102);
+    Room *room3 = room_create(&manager, 103);
 
-    strcpy(manager.rooms[0].code, "ABC123");
-    Room* found = room_find(&manager, "ABC123");
-
-    printf("TableTopWarrior Started\n");
-
-    if (found != NULL)
+    if (room1 != NULL)
     {
-        printf("Found room: %s\n", found->code);
+        printf("Room 1: %s\n", room1->code);
     }
-    else
+
+    if (room2 != NULL)
     {
-        printf("Room not found!\n");
+        printf("Room 2: %s\n", room2->code);
     }
+
+    if (room3 != NULL)
+    {
+        printf("Room 3: %s\n", room3->code);
+    }
+
+    printf("Total rooms: %zu\n", manager.room_count);
 
     return 0;
 }

@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/dev/TableTopWarriors/server"
+    "cmake.sourceDirectory": "C:/dev/TableTopWarriors/server",
+    "makefile.configureOnOpen": false
 }

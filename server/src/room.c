@@ -2,6 +2,44 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _WIN32
+    #include <windows.h>
+    #include <bcrypt.h>
+#else
+    #include <errno.h>
+    #include <sys/random.h>
+#endif
+
+static bool secure_random_byte(unsigned char *byte)
+{
+    if (byte == NULL)
+    {
+        return false;
+    }
+
+#ifdef _WIN32
+    NTSTATUS status = BCryptGenRandom(
+        NULL,
+        byte,
+        1,
+        BCRYPT_USE_SYSTEM_PREFERRED_RNG
+    );
+
+    return BCRYPT_SUCCESS(status);
+#else
+    ssize_t result;
+
+    do
+    {
+        result = getrandom(byte, 1, 0);
+    }
+    while (result == -1 && errno == EINTR);
+
+    return result == 1;
+#endif
+}
+
+
 void room_manager_init(RoomManager *manager)
 {
     if (manager == NULL)
@@ -39,6 +77,36 @@ Room *room_find(RoomManager *manager, const char *code)
     return NULL;
 }
 
+static bool generate_room_code(char code[ROOM_CODE_LENGTH + 1])
+{
+    const char characters[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const unsigned int character_count = sizeof(characters) - 1;
+    const unsigned int limit = 256u - (256u % character_count);
+
+    for (size_t i = 0; i < ROOM_CODE_LENGTH;)
+    {
+        unsigned char random_byte;
+
+        if (!secure_random_byte(&random_byte))
+        {
+            return false;
+        }
+
+        // Reject values that would introduce modulo bias.
+        if (random_byte >= limit)
+        {
+            continue;
+        }
+
+        code[i] = characters[random_byte % character_count];
+        i++;
+    }
+
+    code[ROOM_CODE_LENGTH] = '\0';
+
+    return true;
+}
+
 Room *room_create(RoomManager *manager, uint64_t host_session_id)
 {
     if(manager == NULL || host_session_id == 0)
@@ -67,15 +135,33 @@ Room *room_create(RoomManager *manager, uint64_t host_session_id)
         }
     }
 
-    // Find and join an empty room
+    // Find and initilize an empty room
     for (size_t i=0; i<MAX_ROOMS; i++)
     {
         if (!manager->occupied[i])
         {
             Room *room = &manager->rooms[i];
             
-            // snprintf used for dev.. need secure code creation for online play
-            snprintf(room->code, sizeof(room->code), "%06zu", i);
+            bool unique_code = false;
+
+            for (int attempt = 0; attempt < 100; attempt++)
+            {
+                if (!generate_room_code(room->code))
+                {
+                    return NULL;
+                }
+
+                if (room_find(manager, room->code) == NULL)
+                {
+                    unique_code = true;
+                    break;
+                }
+            }
+
+            if (!unique_code)
+            {
+                return NULL;
+            }
 
             room->status = ROOM_WAITING;
             room->player_count = 1;

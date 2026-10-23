@@ -155,6 +155,7 @@ void test_room_reuse(void)
     Room *room2 = room_create(&manager, 102);
 
     assert(room2 != NULL);
+    assert(room2 == room1);
     assert(manager.room_count == 1);
     assert(room2->players[0].session_id == 102);
     assert(room2->status == ROOM_WAITING);

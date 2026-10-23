@@ -1,3 +1,8 @@
+// Session_id will need to be changed to a generated session token 
+// that can be authenticated before reconnection can happen 
+// Will also need a session timeout in place that open rooms after 
+// a certain amout of time has passed. 
+
 #include "room.h"
 #include <stdio.h>
 #include <string.h>
@@ -331,6 +336,92 @@ bool room_leave(RoomManager *manager, Room *room, uint64_t session_id)
         room->status = ROOM_WAITING;
 
         return true;
+    }
+
+    return false;
+}
+
+bool room_disconnect(RoomManager *manager, Room *room, uint64_t session_id)
+{
+    if (manager == NULL || room == NULL || session_id == 0)
+    {
+        return false;
+    }
+
+    // Verify that the room belongs to this manager and is active.
+    bool room_exists = false;
+
+    for (size_t i = 0; i < MAX_ROOMS; i++)
+    {
+        if (manager->occupied[i] && room == &manager->rooms[i])
+        {
+            room_exists = true;
+            break;
+        }
+    }
+
+    if (!room_exists)
+    {
+        return false;
+    }
+
+    // Search for the player in this room.
+    for (size_t i = 0; i < room->player_count; i++)
+    {
+        if (room->players[i].session_id == session_id)
+        {
+            if (!room->players[i].connected)
+            {
+                return false;
+            }
+
+            room->players[i].connected = false;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool room_reconnect(RoomManager *manager, Room *room, uint64_t session_id)
+{
+    if (manager == NULL || room == NULL || session_id == 0)
+    {
+        return false;
+    }
+
+    // Verify that the room belongs to this manager and is active.
+    bool room_exists = false;
+
+    for (size_t i = 0; i < MAX_ROOMS; i++)
+    {
+        if (manager->occupied[i] && room == &manager->rooms[i])
+        {
+            room_exists = true;
+            break;
+        }
+    }
+
+    if (!room_exists)
+    {
+        return false;
+    }
+
+    // Search for the player in this room.
+    for (size_t i = 0; i < room->player_count; i++)
+    {
+        if (room->players[i].session_id == session_id)
+        {
+            if (room->players[i].connected)
+            {
+                return false;
+            }
+
+            room->players[i].connected = true;
+
+            return true;
+        }
     }
 
     return false;

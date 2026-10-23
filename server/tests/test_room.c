@@ -262,6 +262,84 @@ void test_guest_leave_during_match(void)
     printf("PASS: guest_leave_during_match\n");
 }
 
+void test_room_disconnect(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    assert(room_join(&manager, room, 102) == true);
+
+    // Disconnect the guest.
+    assert(room_disconnect(&manager, room, 102) == true);
+
+    assert(room->players[1].connected == false);
+    assert(room->players[1].session_id == 102);
+    assert(room->player_count == 2);
+    assert(room->status == ROOM_SELECTING);
+
+    // Disconnecting the same player twice should fail.
+    assert(room_disconnect(&manager, room, 102) == false);
+
+    // A new guest cannot take the disconnected player's slot.
+    assert(room_join(&manager, room, 103) == false);
+
+    printf("PASS: room_disconnect\n");
+}
+
+void test_room_reconnect(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    assert(room_join(&manager, room, 102) == true);
+
+    // A connected player cannot reconnect.
+    assert(room_reconnect(&manager, room, 102) == false);
+
+    // Disconnect and reconnect the guest.
+    assert(room_disconnect(&manager, room, 102) == true);
+    assert(room_reconnect(&manager, room, 102) == true);
+
+    assert(room->players[1].connected == true);
+    assert(room->players[1].session_id == 102);
+    assert(room->player_count == 2);
+    assert(room->status == ROOM_SELECTING);
+
+    // Reconnecting twice should fail.
+    assert(room_reconnect(&manager, room, 102) == false);
+
+    printf("PASS: room_reconnect\n");
+}
+
+void test_room_disconnect_invalid_player(void)
+{
+    RoomManager manager;
+    room_manager_init(&manager);
+
+    Room *room = room_create(&manager, 101);
+    assert(room != NULL);
+
+    // Player 999 does not belong to this room.
+    assert(room_disconnect(&manager, room, 999) == false);
+    assert(room_reconnect(&manager, room, 999) == false);
+
+    // Invalid session IDs.
+    assert(room_disconnect(&manager, room, 0) == false);
+    assert(room_reconnect(&manager, room, 0) == false);
+
+    // Invalid room pointers.
+    assert(room_disconnect(&manager, NULL, 101) == false);
+    assert(room_reconnect(&manager, NULL, 101) == false);
+
+    printf("PASS: room_disconnect_invalid_player\n");
+}
+
 int main(void)
 {
     test_room_manager_init();
@@ -277,6 +355,9 @@ int main(void)
     test_host_leave();
     test_guest_leave();
     test_guest_leave_during_match();
+    test_room_disconnect();
+    test_room_reconnect();
+    test_room_disconnect_invalid_player();
 
     printf("\nAll room manager tests passed!\n");
 

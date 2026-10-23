@@ -46,4 +46,8 @@ bool room_destroy(RoomManager *manager, const char *code);
 
 bool room_leave(RoomManager *manager, Room *room, uint64_t session_id);
 
+bool room_disconnect(RoomManager *manager, Room *room, uint64_t session_id);
+
+bool room_reconnect(RoomManager *manager, Room *room, uint64_t session_id);
+
 #endif

@@ -11,6 +11,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 add_library(game_core STATIC
     src/room.c
+    src/game_state.c
 )
 
 target_include_directories(game_core
@@ -43,4 +44,15 @@ target_link_libraries(test_room PRIVATE game_core)
 add_test(
     NAME room_manager_tests
     COMMAND test_room
+)
+
+add_executable(test_game_state
+    tests/test_game_state.c
+)
+
+target_link_libraries(test_game_state PRIVATE game_core)
+
+add_test(
+    NAME game_state_tests
+    COMMAND test_game_state
 )
